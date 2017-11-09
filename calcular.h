@@ -1,8 +1,8 @@
 //
 //  calcular.h
-//  Progama 6
+//  Proga3
 //
-//  Created by Cristina Jimenez on 11/07/17.
+//  Created by Cristina Jimenez on 10/18/17.
 //  Copyright © 2017 Cristina Jimenez. All rights reserved.
 //
 
@@ -17,7 +17,8 @@
 #include <string.h>
 #include <string>
 #include "info.h"
-#include "calcularX.h"
+#include "info2.h"
+#include "calcular2.h"
 
 using namespace std;
 
@@ -39,7 +40,6 @@ public:
         ran = 0;
         LS = 0;
         LI = 0;
-
     }
     Calcular(Par pares){
         this->pares = pares;
@@ -49,6 +49,9 @@ public:
         LI = 0;
     }
     //GETS
+    Par getPares(){
+        return pares;
+    }
     double getSig(){
         return sig;
     }
@@ -144,116 +147,109 @@ public:
     
     //i
     //ESTE METODO CALCULA LA SIGNIFICANCIA DE UNA CORRELACION
-    double sigCorre(){
-
-        double sup;
-        double inf;
+    void sigCorre(Calcular2 calcular2){
+        double sup = fabs(pares.getR())*sqrt(pares.getN()-2);;
+        double inf = sqrt(1-(pow(pares.getR(), 2)));
+        double x = sup/inf;
         
-        sup = fabs(pares.getR())*sqrt(pares.getN()-2);
-        inf = sqrt(1-(pow(pares.getR(), 2)));
-        setSig(sup/inf);
-        return getSig();
-    }
-    //i
-    //ESTE METODO CALCULA EL INTERVALO DE PREDICCION
-    double intervaloPred(){
-        double ran;
-        return ran;
-    }
-    //i
-    //CALCULA LA VARIABLE P
-    double p(){
-        double x = abs(pares.getR()) * sqrt((pares.getN() - 2)) / sqrt(1 - pares.getR() * pares.getR());
-        int dof = pares.getN() - 2;
-        double p;
-        double aux;
-        double error = 0.0000001;
+        calcular2.setX(x);
+        calcular2.setDof(pares.getN()-2);
         
-        CalcularX *calcularX = new CalcularX();
-        calcularX->setX(x);
-        calcularX->setDof(dof);
-        calcularX->operaciones();
+        double p = loopCalcP(calcular2);
         
-        do{
-            aux = p;
-            calcularX->operacionesX2();
-            p = calcularX->getX();
-        }while(fabs(aux - p) > error);
-        
-        return calcularX->getX();
+        setSig(1 - 2.0 * p);
     }
     
-    double loopCalcP(CalcularX calcularX){
+    double loopCalcP(Calcular2 calcular2){
         
-        calcularX.operaciones();
-        double pAct = calcularX.getInfo().getP();
+        calcular2.operaciones();
+        double pAct = calcular2.getInfo().getP();
         double pAnt;
         do
         {
             pAnt = pAct;
-            calcularX.operacionesX2();
-            pAct = calcularX.getInfo().getP();
+            calcular2.operacionesX2();
+            pAct = calcular2.getInfo().getP();
             
-        } while(fabs(pAnt-pAct)>calcularX.getInfo().getE());
+        } while(fabs(pAnt-pAct)>calcular2.getInfo().getE());
         
         return pAct;
     }
-    //=i
-    //ESTE METODO CALCULA t(0.35, dof) QUE ES EL VALOR DE X PARA UNA DISTRIBUCION T CON N-2 GRADOS DE LIBERTAD
-    double t(CalcularX calcularX){
-
-        int dof = calcularX.getDof();
-        calcularX.getInfo().setP(.35);
-        calcularX.setX(1.0);
-        calcularX.setDof(dof);
+    
+    //i
+    //ESTE METODO CALCULA EL INTERVALO DE PREDICCION
+    double intervaloPred(){
+        //calculateX();
+        vector<pair<double,double>> pairs = pares.getVector();
+        //meter progrsma 5
+        
+        //Acabar programa 5
+        double ran;
+        double desv = 0.0;
+        double b = 0;
+        double t = calculateX();
+        double a = 1/(pares.getN());
+        double c = pow(pares.getXK() - pares.getxProm(),2);
+        
+        for( int i = 0; i< pares.getN(); i++){
+             b += pow(pairs[i].first - pares.getxProm(),2);
+            desv = pow(pairs[i].second - regreLinealB0() - (regreLinealB1()*pairs[i].first),2);
+        }
+        
+        ran = t * sqrt(desv*(1/(pares.getN()-2))) * sqrt(1+a+(c/b));
+        return ran;
+    }
+    
+    double calculateX(){
+        //Meter programa 5
+        Calcular2 *calcular2 = new Calcular2();
+        //=d-15
+        double p = 0.35;
+        calcular2->getInfo().setP(p);
+        calcular2->setX(1.0);
+        calcular2->setDof(pares.getN());
         double d = 0.5;
         bool dir = false;
-        double pAux = loopCalcP(calcularX);
-        double p = .35;
-        
-        while(fabs(p-pAux)>calcularX.getInfo().getE()){
+        double pAux = loopCalcP(*calcular2);
+        cout << calcular2->getInfo().getE() << endl;
+        cout << pAux << endl;
+        while(fabs(p-pAux)>calcular2->getInfo().getE()){
             if(pAux<p){
-                calcularX.setX(calcularX.getX()+d);
+                calcular2->setX(calcular2->getX()+d);
                 if(dir){
                     d = d/2;
                 }
                 dir = false;
             }
             else{
-                calcularX.setX(calcularX.getX()-d);
+                calcular2->setX(calcular2->getX()-d);
                 if(!dir){
                     d= d/2;
                 }
                 dir = true;
             }
+            cout << calcular2->getX() << " " << pAux << endl;
+            pAux = loopCalcP(*calcular2);
             
-            pAux = loopCalcP(calcularX);
         }
-        
-    }
-    // ESTE METODO CALCULA LA SIGNIFICANCIA
-    //=i
-    void Sig()
-    {
-        sig = 1 - (2 * p());
+        return calcular2->getX();
     }
     
-    // ESTE METODO CALCULA EL LIMITE SUPERIOR
     //=i
-    void calcLS()
-    {
-        LS = pares.getInfo().getYK + ran;
+    //ESTE METODO CALCULA EL RANGO SUPERIOR
+    void calcUPInt(){
+        setLS(pares.getYK()+intervaloPred());
     }
     
-    // ESTE METODO CALCULA EL LIMITE INFERIOR
     //=i
-    void  calcLI()
-    {
-        LI = calcular.getyk() - ran;
-        
-        if(LI < 0){
-            LI = 0.0;
+    //ESTE METODO CALCULA EL RANGO INFERIOR
+    void calcLPInt(){
+        if(pares.getYK()-intervaloPred() <= 0){
+            setLI(0);
+        }else{
+            setLI(pares.getYK()-intervaloPred());
         }
+        
     }
     
     //=i
@@ -265,7 +261,13 @@ public:
         double aux = pow(pares.getR(),2);
         pares.setR2(aux);
         pares.setYK(predMejorada());
+        setRan(intervaloPred());
+        sigCorre(Calcular2());
+        calcUPInt();
+        calcLPInt();
     }
+    
+    
     //=i
     //ESTE METODO IMPRIME EN CONSOLA LOS RESULTADOS DE LOS CALCULOS 
     void imprimeResultados(){
@@ -277,10 +279,10 @@ public:
         cout<< "b0 = " << setprecision(5) << fixed << pares.getb0() << endl;
         cout<< "b1 = " << setprecision(5) << fixed << pares.getb1() << endl;
         cout<< "yk = " << setprecision(5) << fixed << pares.getYK() << endl;
-        cout<< "sig = "<< setprecision(5) << fixed << sigCorre()    << endl;
-        //cout<< "ran = "<< setprecision(5) << fixed << << endl;
-        //cout<< "LS = "<< setprecision(5) << fixed << << endl;
-        //cout<< "LI = "<< setprecision(5) << fixed << << endl;
+        cout<< "sig = "<< setprecision(10) << fixed << getSig()      << endl;
+        cout<< "ran = "<< setprecision(5) << fixed << getRan()      << endl;
+        cout<< "LS = " << setprecision(5) << fixed << getLS()       << endl;
+        cout<< "LI = " << setprecision(5) << fixed << getLI()       << endl;
     }
 };
 

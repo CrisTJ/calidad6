@@ -1,8 +1,8 @@
 //
 //  info.h
-//  Programa 6
+//  Proga3
 //
-//  Created by Cristina Jimenez on 11/07/17.
+//  Created by Cristina Jimenez on 10/18/17.
 //  Copyright © 2017 Cristina Jimenez. All rights reserved.
 //
 
@@ -38,6 +38,7 @@ private:
     double sumaXsCuad;
     double sumaYsCuad;
     double sumaMultXY;
+    vector<pair<double, double>> vecPares;
     
 public:
     Par(){
@@ -55,6 +56,7 @@ public:
         this->sumaXsCuad = 0;
         this->sumaYsCuad = 0;
         this->sumaMultXY = 0;
+        
     }
     Par(double N, double XK, double r, double r2, double b0, double b1, double YK, double xProm, double yProm, double sumaXs, double sumaYs,double sumaXsCuad, double sumaYsCuad, double sumaMultXY){
         this->N = N;
@@ -81,6 +83,8 @@ public:
         setSumaXsCuad(x);
         setSumaYsCuad(y);
         setSumaMultXY(x, y);
+        vecPares.push_back(make_pair(x, y));
+        
     }
     void setpromedios(){
         setxProm();
@@ -170,6 +174,9 @@ public:
     }
     double getSumaMultXY(){
         return sumaMultXY;
+    }
+    vector<pair<double,double>>getVector(){
+        return vecPares; 
     }
 };
 
